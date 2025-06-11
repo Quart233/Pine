@@ -1,0 +1,72 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Quart233
+
+//@version=6
+indicator("Z-Score SMA Volume", overlay = true)
+current = close
+length = input.int(200, minval=1)
+ZThreshold = input.float(1, title = "Z 阈值（均值）")
+VThreshold = input.float(4, title = "Z 阈值（成交量）")
+ZFill = input.float(0.1, title = "标准差透明度")
+stdMulti = input.float(2, title = "标准差")
+label_ctl = input.bool(true, title = "价格标签")
+label_offset_y = input.float(0.02, title = "价格标签偏移")
+label_offset_x = input.int(3, title = "价格标签合并")
+
+sma = ta.sma(current, length)
+std = ta.stdev(current, length)
+stdUpper = sma + std * stdMulti
+stdLower = sma - std * stdMulti
+
+Z = (current - sma)/std
+
+volume_sma = ta.sma(volume, length)
+volume_std = ta.stdev(volume, length)
+ZVolume = (volume - volume_sma) / volume_std
+
+volume_sma_offsetd = ta.sma(volume[label_offset_x], length)
+volume_std_offsetd = ta.stdev(volume[label_offset_x], length)
+ZVolumeOffseted = (volume[label_offset_x] - volume_sma_offsetd) / volume_std_offsetd
+
+baseline = plot(sma, color=color.yellow, style = plot.style_line)
+
+// Z Price
+ZOver = plot(Z > ZThreshold? current:na, title = "ZOver", color = na, display = display.none)
+ZUnder = plot(Z < -ZThreshold? current:na, title = "ZUnder", color = na, display = display.none)
+fill(ZOver, baseline, color=color.new(color.blue, (stdUpper/current -ZFill) * 100), title="ZOver Fill")
+fill(ZUnder, baseline, color=color.new(color.yellow, (current/stdLower -ZFill) * 100), title="ZUnder Fill")
+
+// Z Volume indicator Up/Down Candle above SMA.
+plotshape(ZVolume > VThreshold and close > open and current > sma, color = color.red, location = location.belowbar, size = size.auto, style = shape.triangleup)
+plotshape(ZVolume > VThreshold and close < open and current > sma, color = color.red, location = location.abovebar, size = size.auto, style = shape.triangledown)
+
+// Z Volume indicator Up/Down Candle below SMA.
+plotshape(ZVolume > VThreshold and close > open and current < sma, color = color.yellow, location = location.belowbar, size = size.auto, style = shape.triangleup)
+plotshape(ZVolume > VThreshold and close < open and current < sma, color = color.yellow, location = location.abovebar, size = size.auto, style = shape.triangledown)
+
+// Z Volume Candle color.
+candleColor = ZVolume > VThreshold? current > sma? color.red:color.yellow:na
+plotcandle(open, high, low, close, color=candleColor, bordercolor=candleColor, wickcolor=candleColor, display = display.pane)
+
+// Z Volume High/Low label.
+high_offsetd = high[label_offset_x]
+low_offsetd = low[label_offset_x]
+
+// Label Y axis.
+label_axis_high = high_offsetd + high_offsetd * label_offset_y
+label_axis_low = low_offsetd - low_offsetd * label_offset_y
+label_bar_index = bar_index - label_offset_x
+
+highest_forward = high_offsetd > ta.highest(high, label_offset_x)
+highest_backward = high_offsetd > ta.highest(high_offsetd[1], label_offset_x)
+
+lowest_forward = low_offsetd < ta.lowest(low, label_offset_x)
+lowest_backward = low_offsetd < ta.lowest(low_offsetd[1], label_offset_x)
+
+if ZVolumeOffseted > VThreshold and label_ctl
+    if close > sma
+        if  highest_forward and highest_backward
+            label.new(label_bar_index, label_axis_high, text=str.tostring(high_offsetd, "#.##"), color=color.blue, textcolor=color.white, style=label.style_label_down, size=size.small)
+    else
+        if lowest_forward and lowest_backward
+            label.new(label_bar_index, label_axis_low,  text=str.tostring(low_offsetd, "#.##"), color=color.red, textcolor=color.white, style=label.style_label_up, size=size.small)
