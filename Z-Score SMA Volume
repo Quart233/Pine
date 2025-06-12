@@ -1,5 +1,5 @@
 // This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// © Quart233
+// © kuaizi
 
 //@version=6
 indicator("Z-Score SMA Volume", overlay = true)
@@ -64,7 +64,7 @@ lowest_forward = low_offsetd < ta.lowest(low, label_offset_x)
 lowest_backward = low_offsetd < ta.lowest(low_offsetd[1], label_offset_x)
 
 if ZVolumeOffseted > VThreshold and label_ctl
-    if close > sma
+    if low_offsetd > sma
         if  highest_forward and highest_backward
             label.new(label_bar_index, label_axis_high, text=str.tostring(high_offsetd, "#.##"), color=color.blue, textcolor=color.white, style=label.style_label_down, size=size.small)
     else
