@@ -36,13 +36,9 @@ ZUnder = plot(Z < -ZThreshold? current:na, title = "ZUnder", color = na, display
 fill(ZOver, baseline, color=color.new(color.blue, (stdUpper/current -ZFill) * 100), title="ZOver Fill")
 fill(ZUnder, baseline, color=color.new(color.yellow, (current/stdLower -ZFill) * 100), title="ZUnder Fill")
 
-// Z Volume indicator Up/Down Candle above SMA.
-plotshape(ZVolume > VThreshold and close > open and current > sma, color = color.red, location = location.belowbar, size = size.auto, style = shape.triangleup)
-plotshape(ZVolume > VThreshold and close < open and current > sma, color = color.red, location = location.abovebar, size = size.auto, style = shape.triangledown)
-
-// Z Volume indicator Up/Down Candle below SMA.
-plotshape(ZVolume > VThreshold and close > open and current < sma, color = color.yellow, location = location.belowbar, size = size.auto, style = shape.triangleup)
-plotshape(ZVolume > VThreshold and close < open and current < sma, color = color.yellow, location = location.abovebar, size = size.auto, style = shape.triangledown)
+// Z Volume candle Up/Down indicator.
+plotshape(ZVolume > VThreshold and close > open, color = color.white, location = location.belowbar, size = size.auto, style = shape.triangleup)
+plotshape(ZVolume > VThreshold and close < open, color = color.white, location = location.abovebar, size = size.auto, style = shape.triangledown)
 
 // Z Volume Candle color.
 candleColor = ZVolume > VThreshold? current > sma? color.red:color.yellow:na
