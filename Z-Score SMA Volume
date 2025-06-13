@@ -4,14 +4,18 @@
 //@version=6
 indicator("Z-Score SMA Volume", overlay = true)
 current = close
-length = input.int(200, minval=1)
+length = input.int(365, minval=1)
 ZThreshold = input.float(1, title = "Z 阈值（均值）")
 VThreshold = input.float(4, title = "Z 阈值（成交量）")
 ZFill = input.float(0.1, title = "标准差透明度")
 stdMulti = input.float(2, title = "标准差")
+
 label_ctl = input.bool(true, title = "价格标签")
 label_offset_y = input.float(0.02, title = "价格标签偏移")
 label_offset_x = input.int(3, title = "价格标签合并")
+
+BFill_ctl = input(false, group = "背景高亮", title = "启用")
+BFill_color = input(#15202b, group = "背景高亮", title = "默认背景")
 
 sma = ta.sma(current, length)
 std = ta.stdev(current, length)
@@ -41,8 +45,13 @@ plotshape(ZVolume > VThreshold and close > open, color = color.white, location =
 plotshape(ZVolume > VThreshold and close < open, color = color.white, location = location.abovebar, size = size.auto, style = shape.triangledown)
 
 // Z Volume Candle color.
-candleColor = ZVolume > VThreshold? current > sma? color.red:color.yellow:na
+isAboveSMA = current > sma? color.red:color.yellow
+candleColor = ZVolume > VThreshold? isAboveSMA:na
 plotcandle(open, high, low, close, color=candleColor, bordercolor=candleColor, wickcolor=candleColor, display = display.pane)
+
+// Z Volume background fill.
+bgColor = BFill_ctl? ZVolume > VThreshold? isAboveSMA:BFill_color:BFill_color
+bgcolor(color.new(bgColor, 80))
 
 // Z Volume High/Low label.
 high_offsetd = high[label_offset_x]
